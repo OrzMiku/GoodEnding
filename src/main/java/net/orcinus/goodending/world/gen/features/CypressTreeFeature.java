@@ -124,26 +124,34 @@ public class CypressTreeFeature extends Feature<WaterTreeFeatureConfig> {
     }
 
     public boolean branchingRoot(WorldGenLevel world, BlockPos blockPos, Block block, RandomSource random, Direction direction, int tries) {
+        final int MAX_DEPTH = 10;
+        if (tries >= MAX_DEPTH) return true;
+        
         BlockPos belowPos = blockPos.below();
-        if (tries == 2) return this.repeatPlace(world, blockPos, block);
+        if (tries == 2) return this.repeatPlace(world, blockPos, block, 0);
+        
         BlockPos finalPos = random.nextInt(3) != 0 ? belowPos : blockPos.relative(direction);
-        if ((world.getBlockState(finalPos).is(GoodEndingTags.CYPRESS_REPLACEABLES) || world.getBlockState(finalPos).canBeReplaced() || world.getBlockState(finalPos).is(Blocks.WATER)) && tries < 2) {
+        if ((world.getBlockState(finalPos).is(GoodEndingTags.CYPRESS_REPLACEABLES) 
+                || world.getBlockState(finalPos).canBeReplaced() 
+                || world.getBlockState(finalPos).is(Blocks.WATER)) && tries < 2) {
             world.setBlock(finalPos, block.defaultBlockState(), 19);
-            tries++;
-            return branchingRoot(world, finalPos, block, random, direction, tries);
-        } else {
-            return true;
+            return branchingRoot(world, finalPos, block, random, direction, tries + 1);
         }
+        return true;
     }
 
-    public boolean repeatPlace(WorldGenLevel world, BlockPos blockPos, Block block) {
+    public boolean repeatPlace(WorldGenLevel world, BlockPos blockPos, Block block, int depth) {
+        final int MAX_DEPTH = 10;
+        if (depth >= MAX_DEPTH) return true;
+
         BlockPos belowPos = blockPos.below();
-        if (world.getBlockState(belowPos).is(GoodEndingTags.CYPRESS_REPLACEABLES) || world.getBlockState(belowPos).is(Blocks.WATER) || world.getBlockState(belowPos).canBeReplaced()) {
+        if (world.getBlockState(belowPos).is(GoodEndingTags.CYPRESS_REPLACEABLES) 
+                || world.getBlockState(belowPos).is(Blocks.WATER) 
+                || world.getBlockState(belowPos).canBeReplaced()) {
             world.setBlock(belowPos, block.defaultBlockState(), 19);
-            return this.repeatPlace(world, belowPos, block);
-        } else {
-            return true;
+            return this.repeatPlace(world, belowPos, block, depth + 1);
         }
+        return true;
     }
 
     public void generateVines(WorldGenLevel world, float probability, RandomSource random, List<BlockPos> leavePositions) {
